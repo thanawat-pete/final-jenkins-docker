@@ -40,3 +40,16 @@ def test_app_health(client):
     response = client.get('/api/hello')
     assert response.status_code == 200
     assert response.content_type == 'application/json'
+
+
+def test_goodbye_endpoint(client):
+    """ทดสอบ API endpoint /api/goodbye"""
+    response = client.get('/api/goodbye')
+    
+    # ตรวจสอบ status code
+    assert response.status_code == 200
+    
+    # ตรวจสอบ response data
+    json_data = response.get_json()
+    assert json_data is not None
+    assert json_data['message'] == 'Goodbye from Flask API!'
