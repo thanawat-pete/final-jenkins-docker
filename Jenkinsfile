@@ -9,7 +9,7 @@ pipeline {
 
     // Environment variables
     environment {
-        DOCKER_HUB_CREDENTIALS_ID = 'final-jenkins-docker'
+        DOCKER_HUB_CREDENTIALS_ID = 'thanawat-pete'
         DOCKER_REPO               = "thanawat047/final-jenkins-docker-express"
 
         // จำลอง DEV/PROD บน Local
