@@ -26,60 +26,60 @@ pipeline {
         choice(name: 'ROLLBACK_TARGET', choices: ['dev', 'prod'], description: 'สำหรับ Rollback: เลือก Environment')
     }
 
-    stages {
-        // Stage 1: Checkout
-        stage('Checkout') {
-            when { expression { params.ACTION == 'Build & Deploy' } }
-            steps {
-                echo "Checking out code..."
-                checkout scm
-            }
-        }
+    // stages {
+    //     // Stage 1: Checkout
+    //     stage('Checkout') {
+    //         when { expression { params.ACTION == 'Build & Deploy' } }
+    //         steps {
+    //             echo "Checking out code..."
+    //             checkout scm
+    //         }
+    //     }
 
-        // Stage 2: Install & Test (ใช้ Python container เหมือนแนวคิด Express/Node test)
-        stage('Install & Test') {
-            when { expression { params.ACTION == 'Build & Deploy' } }
-            steps {
-                echo "Running tests inside a consistent Docker environment..."
-                script {
-                    // รันด้วยสิทธิ์ root เพื่อไม่ให้ติดปัญหา Permission Denied ตอน pip install
-                    docker.image('python:3.13-slim').inside('-u root:root') {
-                        sh '''
-                            pip install --no-cache-dir -r requirements.txt
-                            pytest -v --tb=short --junitxml=test-results.xml
-                        '''
-                    }
-                }
-            }
-            post {
-                always {
-                    // ใส่ allowEmptyResults เผื่อกรณีที่ build พังก่อนที่ pytest จะทันได้สร้างไฟล์
-                    junit testResults: 'test-results.xml', allowEmptyResults: true
-                }
-            }
-        }
+    //     // Stage 2: Install & Test (ใช้ Python container เหมือนแนวคิด Express/Node test)
+    //     stage('Install & Test') {
+    //         when { expression { params.ACTION == 'Build & Deploy' } }
+    //         steps {
+    //             echo "Running tests inside a consistent Docker environment..."
+    //             script {
+    //                 // รันด้วยสิทธิ์ root เพื่อไม่ให้ติดปัญหา Permission Denied ตอน pip install
+    //                 docker.image('python:3.13-slim').inside('-u root:root') {
+    //                     sh '''
+    //                         pip install --no-cache-dir -r requirements.txt
+    //                         pytest -v --tb=short --junitxml=test-results.xml
+    //                     '''
+    //                 }
+    //             }
+    //         }
+    //         post {
+    //             always {
+    //                 // ใส่ allowEmptyResults เผื่อกรณีที่ build พังก่อนที่ pytest จะทันได้สร้างไฟล์
+    //                 junit testResults: 'test-results.xml', allowEmptyResults: true
+    //             }
+    //         }
+    //     }
 
-        // Stage 3: Build & Push Docker Image (Push latest เฉพาะ main)
-        stage('Build & Push Docker Image') {
-            when { expression { params.ACTION == 'Build & Deploy' } }
-            steps {
-                script {
-                    def imageTag = (env.BRANCH_NAME == 'main') ? sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim() : "dev-${env.BUILD_NUMBER}"
-                    env.IMAGE_TAG = imageTag
+    //     // Stage 3: Build & Push Docker Image (Push latest เฉพาะ main)
+    //     stage('Build & Push Docker Image') {
+    //         when { expression { params.ACTION == 'Build & Deploy' } }
+    //         steps {
+    //             script {
+    //                 def imageTag = (env.BRANCH_NAME == 'main') ? sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim() : "dev-${env.BUILD_NUMBER}"
+    //                 env.IMAGE_TAG = imageTag
 
-                    docker.withRegistry('https://index.docker.io/v1/', DOCKER_HUB_CREDENTIALS_ID) {
-                        echo "Building image: ${DOCKER_REPO}:${env.IMAGE_TAG}"
-                        def customImage = docker.build("${DOCKER_REPO}:${env.IMAGE_TAG}")
+    //                 docker.withRegistry('https://index.docker.io/v1/', DOCKER_HUB_CREDENTIALS_ID) {
+    //                     echo "Building image: ${DOCKER_REPO}:${env.IMAGE_TAG}"
+    //                     def customImage = docker.build("${DOCKER_REPO}:${env.IMAGE_TAG}")
 
-                        echo "Pushing images to Docker Hub..."
-                        customImage.push()
-                        if (env.BRANCH_NAME == 'main') {
-                            customImage.push('latest')
-                        }
-                    }
-                }
-            }
-        }
+    //                     echo "Pushing images to Docker Hub..."
+    //                     customImage.push()
+    //                     if (env.BRANCH_NAME == 'main') {
+    //                         customImage.push('latest')
+    //                     }
+    //                 }
+    //             }
+    //         }
+    //     }
 
         // Deploy to DEV (Local Docker) — สำหรับ branch develop
         stage('Deploy to DEV (Local Docker)') {
