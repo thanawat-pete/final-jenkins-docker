@@ -104,10 +104,6 @@ pipeline {
 
         // Approval ก่อน Deploy ไป PROD
         stage('Approval for Production') {
-            when {
-                expression { params.ACTION == 'Build & Deploy' }
-                branch 'main'
-            }
             steps {
                 timeout(time: 1, unit: 'HOURS') {
                     input message: "Deploy image tag '${env.IMAGE_TAG}' to PRODUCTION (Local Docker on port ${PROD_HOST_PORT})?"
@@ -117,10 +113,6 @@ pipeline {
 
         // Deploy to PROD (Local Docker) — สำหรับ branch main
         stage('Deploy to PRODUCTION (Local Docker)') {
-            when {
-                expression { params.ACTION == 'Build & Deploy' }
-                branch 'main'
-            }
             steps {
                 script {
                     def deployCmd = """
@@ -138,7 +130,6 @@ pipeline {
 
         // Rollback เมื่อเลือก ACTION = Rollback
         stage('Execute Rollback') {
-            when { expression { params.ACTION == 'Rollback' } }
             steps {
                 script {
                     if (params.ROLLBACK_TAG.trim().isEmpty()) {
