@@ -42,7 +42,8 @@ pipeline {
             steps {
                 echo "Running tests inside a consistent Docker environment..."
                 script {
-                    docker.image('python:3.13-slim').inside {
+                    // รันด้วยสิทธิ์ root เพื่อไม่ให้ติดปัญหา Permission Denied ตอน pip install
+                    docker.image('python:3.13-slim').inside('-u root:root') {
                         sh '''
                             pip install --no-cache-dir -r requirements.txt
                             pytest -v --tb=short --junitxml=test-results.xml
@@ -52,7 +53,8 @@ pipeline {
             }
             post {
                 always {
-                    junit 'test-results.xml'
+                    // ใส่ allowEmptyResults เผื่อกรณีที่ build พังก่อนที่ pytest จะทันได้สร้างไฟล์
+                    junit testResults: 'test-results.xml', allowEmptyResults: true
                 }
             }
         }
