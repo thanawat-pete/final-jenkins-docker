@@ -1,0 +1,11 @@
+services:
+  app-prod:
+    build:
+      context: .
+    image: thanawat047/final-jenkins-docker-express:latest
+    container_name: flask-app-prod
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_ENV=production
+    restart: always
