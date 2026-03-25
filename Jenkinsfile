@@ -130,6 +130,7 @@ pipeline {
 
         // Rollback เมื่อเลือก ACTION = Rollback
         stage('Execute Rollback') {
+            when { expression { params.ACTION == 'Rollback' } }
             steps {
                 script {
                     if (params.ROLLBACK_TAG.trim().isEmpty()) {
